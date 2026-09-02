@@ -61,17 +61,29 @@
                 tools to help medical staff make informed, safe decisions.
             </p>
         </section>
+
+        <section id="localAI" class="ai-box">
+            <h3>AI Assistant</h3>
+            <input id="aiInput" placeholder="Describe the situation...">
+            <button onclick="runLocalAI()">Evaluate</button>
+            <p id="aiOutput"></p>
+</section>
     </main>
+
+    <script src="scripts/load-components.js"></script>
+    <script src="scripts/jcaho-rules.js"></script>
+    <script src="scripts/ai-assistant.js"></script>
+    <script src="scripts/accessibility.js"></script>
+   
 
     <footer>
         <p>&copy; 2026 AI Guide for Medical Staff</p>
     </footer>
 
-    <script src="scripts/load-components.js"></script>
-<script src="scripts/ai-assistant.js"></script>
-<script src="scripts/accessibility.js"></script>
-<script src="scripts/main.js"></script>
+    
+    
 
 
 </body>
 </html>
+
