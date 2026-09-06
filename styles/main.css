@@ -3,25 +3,26 @@
    =========================== */
 
 body {
-  font-family: Arial, sans-serif;
+  font-family: "Segoe UI", Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background: #f7f7f7;
+  background: #f4f6fb;
   color: #333;
 }
 
 main {
-  max-width: 900px;
+  max-width: 1100px;
   margin: 40px auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
 }
 
 h1, h2, h3 {
   color: #2a6df4;
   margin-bottom: 15px;
+  font-weight: 600;
 }
 
 p {
@@ -29,44 +30,110 @@ p {
   margin-bottom: 15px;
 }
 
-button {
-  cursor: pointer;
+/* ===========================
+   NAVIGATION SIDEBAR
+   =========================== */
+
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 240px;
+  background: #1f54c9;
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+}
+
+.sidebar a {
+  color: #fff;
+  text-decoration: none;
+  margin: 10px 0;
+  padding: 10px 15px;
+  border-radius: 6px;
+  transition: background 0.3s;
+}
+
+.sidebar a:hover {
+  background: rgba(255,255,255,0.15);
 }
 
 /* ===========================
-   AI ASSISTant STYLES
+   DASHBOARD CARDS
    =========================== */
-.ai-box {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  width: 300px;
+
+.card {
   background: #ffffff;
-  border: 2px solid #ccc;
   border-radius: 10px;
-  padding: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  padding: 20px;
+  margin-bottom: 20px;
 }
 
-.ai-box input {
-  width: 100%;
-  padding: 8px;
+.card h3 {
+  color: #2a6df4;
   margin-bottom: 10px;
-  border-radius: 6px;
-  border: 1px solid #aaa;
 }
 
-.ai-box button {
-  width: 100%;
-  padding: 8px;
+.card p {
+  color: #555;
+}
+
+/* ===========================
+   BUTTONS
+   =========================== */
+
+button {
+  cursor: pointer;
   background: #2a6df4;
-  color: white;
+  color: #fff;
   border: none;
   border-radius: 6px;
-  cursor: pointer;
+  padding: 10px 16px;
+  font-size: 15px;
+  transition: background 0.3s;
 }
 
-.ai-box button:hover {
+button:hover {
   background: #1f54c9;
+}
+
+/* ===========================
+   FORM ELEMENTS
+   =========================== */
+
+input, select, textarea {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #2a6df4;
+  box-shadow: 0 0 4px rgba(42,109,244,0.3);
+}
+
+/* ===========================
+   RESPONSIVE DESIGN
+   =========================== */
+
+@media (max-width: 768px) {
+  main {
+    margin: 20px;
+    padding: 20px;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    flex-direction: row;
+    justify-content: space-around;
+  }
 }
