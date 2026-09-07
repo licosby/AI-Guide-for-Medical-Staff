@@ -27,18 +27,57 @@
 </nav>
 
 
-  <main>
-    <h2>Page Under Construction</h2>
-  </main>
+<main>
+  <h2>Treatment Plan Analyzer</h2>
+  <p>Paste a treatment plan below and click Analyze. The system will check for safety issues, compliance risks, and missing elements.</p>
+
+  <textarea id="planInput" placeholder="Paste treatment plan here..." style="width:100%;height:180px;padding:12px;border-radius:8px;border:1px solid #ccc;font-size:1rem;"></textarea>
+
+  <button onclick="analyzePlan()" style="background:#2a6df4;color:white;padding:12px 20px;border:none;border-radius:8px;cursor:pointer;font-size:1rem;margin-top:20px;">
+    Analyze Treatment Plan
+  </button>
+
+  <div id="results" style="margin-top:30px;padding:20px;background:white;border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.05);"></div>
+</main>
 
   <footer>
     <p>&copy; 2026 Human-Centered AI Healthcare Project</p>
   </footer>
 
+  <script src="../scripts/rule-engine.js"></script>
+
+<script>
+async function analyzePlan() {
+    const planText = document.getElementById("planInput").value;
+    const results = await analyzePlanText(planText);
+
+    const output = document.getElementById("results");
+    output.innerHTML = `
+        <h3>Results</h3>
+        <p><strong>Risk Score:</strong> ${results.score} (${results.riskLevel})</p>
+    `;
+
+    results.alerts.forEach(alert => {
+        output.innerHTML += `
+            <div style="
+                padding:12px;
+                border-radius:6px;
+                margin-bottom:10px;
+                background:${alert.level === "high" ? "#ffdddd" : alert.level === "medium" ? "#fff4cc" : "#ddffdd"};
+                border-left:6px solid ${alert.level === "high" ? "#ff4d4d" : alert.level === "medium" ? "#ffcc00" : "#33cc33"};
+            ">
+                ${alert.msg}
+            </div>
+        `;
+    });
+}
+</script>
 
 <script src="../scripts/ai-assistant.js"></script>
 <script src="../scripts/accessibility.js"></script>
 <script src="../scripts/communication-modes.js"></script>
+
+
 
 </body>
 </html>

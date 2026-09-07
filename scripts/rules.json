@@ -1,0 +1,24 @@
+{
+  "dangerSymptoms": [
+    { "term": "chest pain", "level": "high", "msg": "Chest pain is a critical emergency indicator." },
+    { "term": "shortness of breath", "level": "high", "msg": "Respiratory distress detected." },
+    { "term": "vomiting blood", "level": "high", "msg": "Possible GI hemorrhage." },
+    { "term": "unresponsive", "level": "high", "msg": "Patient unresponsive — immediate intervention required." },
+    { "term": "seizure", "level": "high", "msg": "Seizure activity detected." },
+    { "term": "loss of consciousness", "level": "high", "msg": "Loss of consciousness is a critical sign." },
+    { "term": "unstable", "level": "high", "msg": "Patient instability detected." },
+    { "term": "rapid decline", "level": "high", "msg": "Rapid deterioration detected." }
+  ],
+
+  "missingInfo": [
+    { "term": "diagnosis", "level": "medium", "msg": "Diagnosis not clearly stated." },
+    { "term": "allerg", "level": "medium", "msg": "Allergy information missing." },
+    { "term": "bp", "level": "low", "msg": "Blood pressure not documented." },
+    { "term": "follow", "level": "low", "msg": "Follow-up instructions missing." }
+  ],
+
+  "medicationRules": [
+    { "term": "medication", "requires": "mg", "level": "high", "msg": "Medication listed without dosage." },
+    { "combo": ["warfarin", "ibuprofen"], "level": "high", "msg": "Warfarin + Ibuprofen increases bleeding risk." }
+  ]
+}
