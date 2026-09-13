@@ -1,45 +1,320 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Human-Centered AI Guide for Medical Staff</title>
-  <link rel="stylesheet" href="../styles/main.css">
-  <link rel="stylesheet" href="../styles/accessibility.css">
-  <link rel="stylesheet" href="../styles/components.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Safe AI Decision Tree</title>
+
+<link rel="stylesheet" href="../styles/main.css">
+<link rel="stylesheet" href="../styles/accessibility.css">
+<link rel="stylesheet" href="../styles/components.css">
 </head>
 
 <body>
-  <header>
-    <h1>Human-Centered AI Guide for Medical Staff</h1>
-    <p class="tagline">Helping clinicians evaluate AI tools safely, ethically, and with clear explainability.</p>
-  </header>
+
+<header>
+  <h1>Human Centered AI Guide for Medical Staff</h1>
+  <p class="tagline">Helping clinicians evaluate AI tools safely, ethically, and with clear explainability.</p>
+</header>
 
 <nav>
-    <ul>
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="treatment-plan.html">Treatment Plan Analyzer</a></li>
-        <li><a href="bias-safe-ai.html">AI Bias & Safety Training</a></li>
-        <li><a href="risk-calculator.html">Risk-to-Human Calculator</a></li>
-        <li><a href="explainability-viewer.html">Explainability Viewer</a></li>
-        <li><a href="patient-communication.html">Patient Communication Suite</a></li>
-    </ul>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="treatment-plan.html">Treatment Plan Analyzer</a></li>
+    <li><a href="bias-safe-ai.html">AI Bias & Safety Training</a></li>
+    <li><a href="risk-calculator.html">Risk to Human Calculator</a></li>
+    <li><a href="explainability-viewer.html">Explainability Viewer</a></li>
+    <li><a href="patient-communication.html">Patient Communication Suite</a></li>
+  </ul>
 </nav>
 
+<main class="treatment-analyzer">
 
-  <main>
-    <h2>Page Under Construction</h2>
-  </main>
+  <div class="analyzer-grid">
 
-  <footer>
-    <p>&copy; 2026 Human-Centered AI Healthcare Project</p>
-  </footer>
+    <!-- LEFT COLUMN: TREE VISUAL -->
+    <div class="left-card card">
+      <h3>Safe AI Decision Tree</h3>
+      <p>This flow walks through Human Centered AI pillars for this specific patient and treatment plan.</p>
 
+      <div class="tree-container" id="treeContainer">
+        <!-- Nodes appear here dynamically -->
+      </div>
+    </div>
 
-<script src="../scripts/ai-assistant.js"></script>
-<script src="../scripts/accessibility.js"></script>
-<script src="../scripts/bias-checker.js"></script>
+    <!-- RIGHT COLUMN: QUESTION + REPORT -->
+    <div>
 
+      <!-- Current Question -->
+      <section class="card" id="currentQuestion">
+        <h3>Current Pillar Question</h3>
+        <p id="questionText">Click Begin Evaluation to start the decision tree.</p>
+
+        <button class="analyze-inside" id="beginBtn">Begin Evaluation</button>
+
+        <div id="answerButtons" style="margin-top: 12px; display: none;">
+          <button class="analyze-inside" id="yesBtn">Yes</button>
+          <button class="analyze-inside" id="noBtn" style="margin-top: 8px; background: #c0392b;">No</button>
+        </div>
+
+        <p id="pillarWarning" style="margin-top: 10px; color: #c0392b;"></p>
+
+        <button class="analyze-inside" id="overrideBtn" style="margin-top: 8px; background: #f39c12; display: none;">
+          Override this pillar for this case
+        </button>
+
+        <p id="overrideStatus" style="margin-top: 4px;"></p>
+      </section>
+
+      <!-- Report -->
+      <section class="card" id="hcaiReport" style="margin-top: 20px;">
+        <h3>HCAI Compliance and Risk Report</h3>
+        <div id="hcaiSummary"></div>
+        <ul id="hcaiFindings"></ul>
+        <p id="hcaiOverall"></p>
+      </section>
+
+      <!-- Send to Risk Calculator -->
+      <section class="card" style="margin-top: 20px;">
+        <button class="analyze-inside" id="sendToRisk">Send to Risk Calculator</button>
+        <p id="sendWarning" style="margin-top: 10px; color: #c0392b;"></p>
+      </section>
+
+    </div>
+
+  </div>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Human Centered AI Healthcare Project</p>
+</footer>
+
+<script>
+// Pillars in order
+const pillars = [
+  {
+    key: "transparency",
+    title: "Transparency and Explainability",
+    question: "Does this treatment plan clearly show why it was chosen for this patient, including reasoning, sources, and confidence.",
+    riskWeight: 4
+  },
+  {
+    key: "fairness",
+    title: "Fairness and Inclusivity",
+    question: "Does this plan avoid bias and treat this patient fairly compared to similar patients, including race, language, and access.",
+    riskWeight: 5
+  },
+  {
+    key: "privacy",
+    title: "Privacy and Security",
+    question: "Does this plan protect the patient’s data and follow privacy governance.",
+    riskWeight: 3
+  },
+  {
+    key: "accountability",
+    title: "Accountability",
+    question: "Is there clear human oversight and responsibility for this treatment plan.",
+    riskWeight: 4
+  },
+  {
+    key: "sustainability",
+    title: "Sustainability",
+    question: "Does this plan use AI responsibly, balancing compute cost with positive impact.",
+    riskWeight: 2
+  }
+];
+
+let currentIndex = -1;
+const state = {};
+pillars.forEach(p => {
+  state[p.key] = { answer: null, overridden: false };
+});
+
+const treeContainer = document.getElementById("treeContainer");
+const questionText = document.getElementById("questionText");
+const beginBtn = document.getElementById("beginBtn");
+const answerButtons = document.getElementById("answerButtons");
+const yesBtn = document.getElementById("yesBtn");
+const noBtn = document.getElementById("noBtn");
+const pillarWarning = document.getElementById("pillarWarning");
+const overrideBtn = document.getElementById("overrideBtn");
+const overrideStatus = document.getElementById("overrideStatus");
+
+const hcaiSummary = document.getElementById("hcaiSummary");
+const hcaiFindings = document.getElementById("hcaiFindings");
+const hcaiOverall = document.getElementById("hcaiOverall");
+const sendToRisk = document.getElementById("sendToRisk");
+const sendWarning = document.getElementById("sendWarning");
+
+// Start evaluation
+beginBtn.addEventListener("click", () => {
+  currentIndex = 0;
+  showCurrentQuestion();
+  answerButtons.style.display = "block";
+  beginBtn.style.display = "none";
+});
+
+// Show current pillar question
+function showCurrentQuestion() {
+  const pillar = pillars[currentIndex];
+  questionText.textContent = pillar.question;
+  pillarWarning.textContent = "";
+  overrideBtn.style.display = "none";
+  overrideStatus.textContent = "";
+}
+
+// Handle answers
+yesBtn.addEventListener("click", () => {
+  handleAnswer("yes");
+});
+
+noBtn.addEventListener("click", () => {
+  handleAnswer("no");
+});
+
+function handleAnswer(answer) {
+  const pillar = pillars[currentIndex];
+  state[pillar.key].answer = answer;
+
+  addTreeNode(pillar, answer);
+
+  if (answer === "no") {
+    pillarWarning.textContent =
+      "This plan does not align with this pillar for this patient. You may override with justification.";
+    overrideBtn.style.display = "block";
+  } else {
+    pillarWarning.textContent = "";
+    overrideBtn.style.display = "none";
+    overrideStatus.textContent = "";
+    state[pillar.key].overridden = false;
+  }
+
+  renderReport();
+
+  if (currentIndex < pillars.length - 1) {
+    currentIndex++;
+    showCurrentQuestion();
+  } else {
+    questionText.textContent = "Decision tree complete. Review the report and proceed if appropriate.";
+    answerButtons.style.display = "none";
+  }
+}
+
+// Override
+overrideBtn.addEventListener("click", () => {
+  const pillar = pillars[currentIndex];
+  state[pillar.key].overridden = !state[pillar.key].overridden;
+  if (state[pillar.key].overridden) {
+    overrideStatus.textContent =
+      "Override applied. You are accepting this pillar for this case with documented justification.";
+  } else {
+    overrideStatus.textContent = "";
+  }
+  renderReport();
+});
+
+// Add node to visual tree
+function addTreeNode(pillar, answer) {
+  const node = document.createElement("div");
+  node.className = "tree-node";
+
+  const label = document.createElement("div");
+  label.className = "node-label";
+  label.textContent = pillar.title;
+
+  const path = document.createElement("div");
+  path.className = "node-path";
+  path.textContent = answer === "yes"
+    ? "Path: Yes — aligned with this pillar."
+    : "Path: No — not aligned, review or override.";
+
+  node.appendChild(label);
+  node.appendChild(path);
+  treeContainer.appendChild(node);
+}
+
+// Risk calculation and report
+function renderReport() {
+  let riskScore = 0;
+  let findings = [];
+  let warnings = [];
+
+  pillars.forEach(p => {
+    const s = state[p.key];
+    if (s.answer === "no" && !s.overridden) {
+      riskScore += p.riskWeight * 2;
+      findings.push(`<li><strong>${p.title}:</strong> not aligned and no override applied.</li>`);
+      warnings.push(`${p.title} is not aligned and has no override.`);
+    } else if (s.answer === "no" && s.overridden) {
+      riskScore += p.riskWeight;
+      findings.push(`<li><strong>${p.title}:</strong> not aligned but override applied.</li>`);
+    } else if (s.answer === "yes") {
+      findings.push(`<li><strong>${p.title}:</strong> aligned with this pillar.</li>`);
+    } else {
+      findings.push(`<li><strong>${p.title}:</strong> not answered yet.</li>`);
+    }
+  });
+
+  let band = "Low";
+  let bandClass = "risk-low";
+
+  if (riskScore >= 18) {
+    band = "High";
+    bandClass = "risk-high";
+  } else if (riskScore >= 10) {
+    band = "Moderate";
+    bandClass = "risk-moderate";
+  } else if (riskScore >= 24) {
+    band = "Escalation";
+    bandClass = "risk-escalation";
+  }
+
+  hcaiSummary.innerHTML = `
+    <p><strong>Numeric risk score:</strong> ${riskScore}</p>
+    <p><strong>Risk band:</strong> <span class="${bandClass}">${band}</span></p>
+  `;
+
+  hcaiFindings.innerHTML = findings.join("");
+
+  if (warnings.length === 0) {
+    hcaiOverall.innerHTML = `
+      <p class="risk-low">
+        All pillars are aligned or have overrides. You may proceed to the Risk to Human Calculator with documented caution.
+      </p>
+    `;
+  } else {
+    hcaiOverall.innerHTML = `
+      <p class="risk-high">
+        Ethics warnings detected:
+      </p>
+      <ul>
+        ${warnings.map(w => `<li>${w}</li>`).join("")}
+      </ul>
+      <p>
+        You may still proceed to the Risk to Human Calculator, but these concerns should be documented and reviewed.
+      </p>
+    `;
+  }
+}
+
+// Send to Risk Calculator
+sendToRisk.addEventListener("click", () => {
+  let unresolved = pillars.some(p => {
+    const s = state[p.key];
+    return s.answer === "no" && !s.overridden;
+  });
+
+  if (unresolved) {
+    sendWarning.textContent =
+      "Some pillars are not aligned and have no override. Proceeding will require strong clinical judgment and documentation.";
+  } else {
+    sendWarning.textContent = "";
+  }
+
+  window.location.href = "risk-calculator.html";
+});
+</script>
 
 </body>
 </html>

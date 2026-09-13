@@ -309,3 +309,67 @@ button:hover {
     text-align: center;
   }
 }
+/* ===========================
+   DECISION TREE FLOWCHART
+   =========================== */
+
+.tree-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 20px;
+}
+
+.tree-node {
+  position: relative;
+  padding: 16px 20px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.tree-node::before {
+  content: "";
+  position: absolute;
+  left: 24px;
+  top: -20px;
+  width: 2px;
+  height: 20px;
+  background: #d0d4e4;
+}
+
+.tree-node:first-child::before {
+  display: none;
+}
+
+.node-label {
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+}
+
+.node-path {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+/* Risk band colors */
+.risk-low {
+  color: green;
+  font-weight: 600;
+}
+
+.risk-moderate {
+  color: orange;
+  font-weight: 600;
+}
+
+.risk-high {
+  color: red;
+  font-weight: 600;
+}
+
+.risk-escalation {
+  color: purple;
+  font-weight: 600;
+}
