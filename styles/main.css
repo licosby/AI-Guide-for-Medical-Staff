@@ -193,12 +193,12 @@ button:hover {
 
 .pi-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: repeat(3, 1fr);
   gap: 20px;
 }
 
 .pi-grid .full {
-  grid-column: span 2;
+  grid-column: span 3;
 }
 
 /* ===========================
@@ -208,7 +208,8 @@ button:hover {
 .treatment-plan {
   width: 100%;
   max-width: 600px;
-  padding-right: 20px;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .treatment-plan h3 {
@@ -220,6 +221,22 @@ button:hover {
 .treatment-plan input,
 .treatment-plan textarea {
   padding-right: 20px;
+}
+
+.analyze-inside {
+  background: #1f54c9;
+  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+  width: 100%;
+  transition: background 0.3s;
+}
+
+.analyze-inside:hover {
+  background: #2a6df4;
 }
 
 /* Medication Row Layout */
@@ -242,24 +259,6 @@ button:hover {
   border: 1px solid #ccc;
 }
 
-/* ===========================
-   ANALYZE BUTTON
-   =========================== */
-
-.analyze-action button {
-  background: #1f54c9;
-  color: white;
-  padding: 14px 24px;
-  font-size: 1.1rem;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.analyze-action button:hover {
-  background: #2a6df4;
-}
 
 /* ===========================
    BADGES

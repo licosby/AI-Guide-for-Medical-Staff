@@ -3,27 +3,29 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Human-Centered AI Guide for Medical Staff</title>
+  <title>Treatment Plan Analyzer</title>
+
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/accessibility.css">
   <link rel="stylesheet" href="../styles/components.css">
 </head>
 
 <body>
-  <header>
-    <h1>Human-Centered AI Guide for Medical Staff</h1>
-    <p class="tagline">Helping clinicians evaluate AI tools safely, ethically, and with clear explainability.</p>
-  </header>
+
+<header>
+  <h1>Human-Centered AI Guide for Medical Staff</h1>
+  <p class="tagline">Helping clinicians evaluate AI tools safely, ethically, and with clear explainability.</p>
+</header>
 
 <nav>
-    <ul>
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="treatment-plan.html">Treatment Plan Analyzer</a></li>
-        <li><a href="risk-calculator.html">Risk-to-Human Calculator</a></li>
-        <li><a href="explainability-viewer.html">Explainability Viewer</a></li>
-        <li><a href="bias-safe-ai.html">Bias & Safe-AI Tools</a></li>
-        <li><a href="patient-communication.html">Patient Communication Suite</a></li>
-    </ul>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="treatment-plan.html">Treatment Plan Analyzer</a></li>
+    <li><a href="risk-calculator.html">Risk-to-Human Calculator</a></li>
+    <li><a href="explainability-viewer.html">Explainability Viewer</a></li>
+    <li><a href="bias-safe-ai.html">Bias & Safe-AI Tools</a></li>
+    <li><a href="patient-communication.html">Patient Communication Suite</a></li>
+  </ul>
 </nav>
 
 <main class="treatment-analyzer">
@@ -33,88 +35,81 @@
 
   <div class="analyzer-grid">
 
-<!-- LEFT COLUMN -->
-    <div>
+    <!-- LEFT COLUMN -->
+    <div class="left-card card">
 
- <!-- SELECT PATIENT -->
-      <section class="card">
-        <h3>Select Patient</h3>
-        <select id="patientSelect">
-          <option value="">Choose a patient...</option>
-        </select>
-        <button id="newPatientBtn">Add New Patient</button>
-      </section>
+      <h3>Select Patient</h3>
 
- <!-- PATIENT INFORMATION -->
-     <section class="patient-info card">
-  <h3>Patient Information</h3>
+      <select id="patientSelect">
+        <option value="">Choose a patient...</option>
+      </select>
 
-  <div class="pi-grid">
+      <button id="newPatientBtn">Add New Patient</button>
 
-    <div>
-      <strong>First Name:</strong>
-      <span id="infoFirst"></span>
-    </div>
+      <h3 class="pi-title">Patient Information</h3>
 
-    <div>
-      <strong>Last Name:</strong>
-      <span id="infoLast"></span>
-    </div>
+      <div class="pi-grid">
 
-    <div>
-      <strong>Age:</strong>
-      <span id="infoAge"></span>
-    </div>
+        <div>
+          <strong>First Name:</strong>
+          <span id="infoFirst"></span>
+        </div>
 
-    <div>
-      <strong>Sex:</strong>
-      <span id="infoSex"></span>
-    </div>
+        <div>
+          <strong>Last Name:</strong>
+          <span id="infoLast"></span>
+        </div>
 
-    <div>
-      <strong>Weight (kg):</strong>
-      <span id="infoWeight"></span>
-    </div>
+        <div>
+          <strong>Age:</strong>
+          <span id="infoAge"></span>
+        </div>
 
-    <div class="full">
-      <strong>Allergies:</strong>
-      <span id="infoAllergies"></span>
-    </div>
+        <div>
+          <strong>Sex:</strong>
+          <span id="infoSex"></span>
+        </div>
 
-    <div class="full">
-      <strong>Current Medications:</strong>
-      <span id="infoMeds"></span>
-    </div>
+        <div>
+          <strong>Weight (kg):</strong>
+          <span id="infoWeight"></span>
+        </div>
 
+        <div class="full">
+          <strong>Allergies:</strong>
+          <span id="infoAllergies"></span>
+        </div>
 
-</section>
+        <div class="full">
+          <strong>Current Medications:</strong>
+          <span id="infoMeds"></span>
+        </div>
+
+      </div>
 
     </div>
+
     <!-- RIGHT COLUMN -->
     <div>
 
-<!-- TREATMENT PLAN -->
-<section class="treatment-plan card">
-  <h3>Proposed Treatment Plan</h3>
+      <section class="treatment-plan card">
+        <h3>Proposed Treatment Plan</h3>
 
-  <div id="medList"></div>
+        <div id="medList"></div>
 
-  <button id="addMedBtn">+ Add Medication</button>
+        <button id="addMedBtn">+ Add Medication</button>
 
-  <label>Clinical Notes:</label>
-  <textarea id="clinicalNotes"></textarea>
+        <label>Clinical Notes:</label>
+        <textarea id="clinicalNotes"></textarea>
 
-  <label>Additional Treatments:</label>
-  <textarea id="otherPlans"></textarea>
-</section>
+        <label>Additional Treatments:</label>
+        <textarea id="otherPlans"></textarea>
 
-  </div>
+         <button id="analyzeBtn">Analyze Plan</button>
+      </section>
 
-  </div>
+    </div>
 
-  <!-- ANALYZE BUTTON -->
-  <div class="analyze-action">
-    <button id="analyzeBtn">Analyze Plan</button>
   </div>
 
   <!-- RESULTS -->
@@ -125,55 +120,112 @@
 
 </main>
 
+<footer>
+  <p>&copy; 2026 Human-Centered AI Healthcare Project</p>
+</footer>
 
 
-  <footer>
-    <p>&copy; 2026 Human-Centered AI Healthcare Project</p>
-  </footer>
+<!-- ===========================
+     ADD NEW PATIENT MODAL
+=========================== -->
+<div id="newPatientModal" class="modal hidden">
+  <div class="modal-content card">
 
-  <script src="../scripts/rule-engine.js"></script>
+    <h3>Add New Patient</h3>
+
+    <label>First Name</label>
+    <input id="newFirst">
+
+    <label>Last Name</label>
+    <input id="newLast">
+
+    <label>Age</label>
+    <input id="newAge">
+
+    <label>Sex</label>
+    <input id="newSex">
+
+    <label>Weight (kg)</label>
+    <input id="newWeight">
+
+    <label>Allergies</label>
+    <textarea id="newAllergies"></textarea>
+
+    <label>Current Medications</label>
+    <textarea id="newMeds"></textarea>
+
+    <button id="savePatientBtn">Save Patient</button>
+    <button id="closePatientBtn">Close</button>
+
+  </div>
+</div>
+
+
+<!-- ===========================
+     JAVASCRIPT
+=========================== -->
+
+<script src="../scripts/rule-engine.js"></script>
 
 <script>
+// Add Medication
+document.getElementById("addMedBtn").addEventListener("click", () => {
+  const medList = document.getElementById("medList");
 
+  const row = document.createElement("div");
+  row.classList.add("med-row");
 
-async function analyzePlan() {
-    const planText = document.getElementById("planInput").value;
-    const results = await analyzePlanText(planText);
+  row.innerHTML = `
+    <input type="text" placeholder="Medication">
+    <input type="text" placeholder="Dosage">
+    <input type="text" placeholder="Frequency">
+  `;
 
-    const output = document.getElementById("results");
-    output.innerHTML = `
-        <h3>Results</h3>
-        <p><strong>Risk Score:</strong> ${results.score} (${results.riskLevel})</p>
-    `;
+  medList.appendChild(row);
+});
 
-    results.alerts.forEach(alert => {
-        output.innerHTML += `
-            <div style="
-                padding:12px;
-                border-radius:6px;
-                margin-bottom:10px;
-                background:${alert.level === "high" ? "#ffdddd" : alert.level === "medium" ? "#fff4cc" : "#ddffdd"};
-                border-left:6px solid ${alert.level === "high" ? "#ff4d4d" : alert.level === "medium" ? "#ffcc00" : "#33cc33"};
-            ">
-                ${alert.msg}
-            </div>
-        `;
-    });
-}
-</script>
+// Modal Controls
+const modal = document.getElementById("newPatientModal");
 
-<script>
-// EXISTING ANALYSIS FUNCTION
-async function analyzePlan() {
-    ...
-}
+document.getElementById("newPatientBtn").addEventListener("click", () => {
+  modal.classList.remove("hidden");
+});
+
+document.getElementById("closePatientBtn").addEventListener("click", () => {
+  modal.classList.add("hidden");
+});
+
+// Save Patient
+document.getElementById("savePatientBtn").addEventListener("click", () => {
+  const first = document.getElementById("newFirst").value;
+  const last = document.getElementById("newLast").value;
+  const age = document.getElementById("newAge").value;
+  const sex = document.getElementById("newSex").value;
+  const weight = document.getElementById("newWeight").value;
+  const allergies = document.getElementById("newAllergies").value;
+  const meds = document.getElementById("newMeds").value;
+
+  const select = document.getElementById("patientSelect");
+  const option = document.createElement("option");
+  option.value = first + " " + last;
+  option.textContent = first + " " + last;
+  select.appendChild(option);
+
+  modal.classList.add("hidden");
+});
+
+// Analyze Plan (placeholder)
+document.getElementById("analyzeBtn").addEventListener("click", () => {
+  document.getElementById("results").innerHTML = `
+    <h3>Analysis Results</h3>
+    <p>Analysis complete. (Placeholder)</p>
+  `;
+});
 </script>
 
 <script src="../scripts/ai-assistant.js"></script>
 <script src="../scripts/accessibility.js"></script>
 <script src="../scripts/communication-modes.js"></script>
-
-
 
 </body>
 </html>
