@@ -150,6 +150,117 @@ nav a:hover {
   cursor: pointer;
 }
 
+button:hover {
+  opacity: 0.9;
+}
+
+/* ===========================
+   TREATMENT ANALYZER LAYOUT
+   =========================== */
+
+.analyzer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  align-items: stretch;
+}
+
+/* Right column centered */
+.analyzer-grid > div:last-child {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Left column normal */
+.analyzer-grid > div:first-child {
+  display: block;
+}
+
+/* ===========================
+   LEFT COLUMN CARD
+   =========================== */
+
+.left-card {
+  width: 100%;
+}
+
+.pi-title {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.pi-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.pi-grid .full {
+  grid-column: span 2;
+}
+
+/* ===========================
+   PROPOSED TREATMENT PLAN
+   =========================== */
+
+.treatment-plan {
+  width: 100%;
+  max-width: 600px;
+  padding-right: 20px;
+}
+
+.treatment-plan h3 {
+  width: 100%;
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.treatment-plan input,
+.treatment-plan textarea {
+  padding-right: 20px;
+}
+
+/* Medication Row Layout */
+.med-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 15px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.med-row div {
+  font-weight: 500;
+}
+
+.med-row input {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+/* ===========================
+   ANALYZE BUTTON
+   =========================== */
+
+.analyze-action button {
+  background: #1f54c9;
+  color: white;
+  padding: 14px 24px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.analyze-action button:hover {
+  background: #2a6df4;
+}
+
 /* ===========================
    BADGES
    =========================== */
@@ -166,6 +277,10 @@ nav a:hover {
    =========================== */
 
 @media (max-width: 900px) {
+  .analyzer-grid {
+    grid-template-columns: 1fr;
+  }
+
   .hero {
     flex-direction: column;
     text-align: center;
