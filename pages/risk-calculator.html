@@ -3,45 +3,174 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Human-Centered AI Guide for Medical Staff</title>
+  <title>Risk to Human Calculator</title>
+
   <link rel="stylesheet" href="../styles/main.css">
   <link rel="stylesheet" href="../styles/accessibility.css">
   <link rel="stylesheet" href="../styles/components.css">
 </head>
 
 <body>
-  <header>
-    <h1>Human-Centered AI Guide for Medical Staff</h1>
-    <p class="tagline">Helping clinicians evaluate AI tools safely, ethically, and with clear explainability.</p>
-  </header>
+
+<header>
+  <h1>Risk to Human Calculator</h1>
+  <p class="tagline">Evaluating treatment plan safety using Human Centered AI principles.</p>
+</header>
 
 <nav>
-    <ul>
-        <li><a href="../index.html">Home</a></li>
-        <li><a href="treatment-plan.html">Treatment Plan Analyzer</a></li>
-        <li><a href="bias-safe-ai.html">AI Bias & Safety Training</a></li>
-        <li><a href="risk-calculator.html">Risk-to-Human Calculator</a></li>
-        <li><a href="explainability-viewer.html">Explainability Viewer</a></li>
-        <li><a href="patient-communication.html">Patient Communication Suite</a></li>
-    </ul>
+  <ul>
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="treatment-plan.html">Treatment Plan Analyzer</a></li>
+    <li><a href="bias-safe-ai.html">AI Bias & Safety Training</a></li>
+    <li><a href="risk-calculator.html">Risk to Human Calculator</a></li>
+    <!--<li><a href="explainability-viewer.html">Explainability Viewer</a></li>-->
+    <!--<li><a href="patient-communication.html">Patient Communication Suite</a></li>-->
+  </ul>
 </nav>
 
+<main class="treatment-analyzer">
+
+  <div class="risk-grid">
 
 
+    <!-- LEFT COLUMN: RISK SCORE -->
+    <div class="card">
+      <h3>Overall Risk Score</h3>
+      <p>This score reflects the combined safety risk of the treatment plan.</p>
 
-  <main>
-    <h2>Page Under Construction</h2>
-  </main>
+      <div id="riskGauge" class="risk-gauge-bar">
+        <div id="riskGaugeFill" class="risk-gauge-fill"></div>
+      </div>
 
-  <footer>
-    <p>&copy; 2026 Human-Centered AI Healthcare Project</p>
-  </footer>
+      <p id="riskScoreText" class="risk-score-text"></p>
+      <p id="riskBandText" class="risk-band-text"></p>
+    </div>
 
+    <!-- CENTER COLUMN: RISK FACTORS -->
+    <div class="card">
+      <h3>Risk Factor Breakdown</h3>
+      <p>Each factor contributes to the overall risk score.</p>
 
-<script src="../scripts/ai-assistant.js"></script>
-<script src="../scripts/accessibility.js"></script>
-<script src="../scripts/[page-specific-script].js"></script>
-<script src="../scripts/risk-calculator.js"></script>
+      <div class="risk-factor">
+        <label>Drug Interactions</label>
+        <div class="risk-bar"><div class="risk-fill" style="width: 70%;"></div></div>
+        <span>70</span>
+      </div>
+
+      <div class="risk-factor">
+        <label>Allergy Conflicts</label>
+        <div class="risk-bar"><div class="risk-fill" style="width: 40%;"></div></div>
+        <span>40</span>
+      </div>
+
+      <div class="risk-factor">
+        <label>Dose Appropriateness</label>
+        <div class="risk-bar"><div class="risk-fill" style="width: 55%;"></div></div>
+        <span>55</span>
+      </div>
+
+      <div class="risk-factor">
+        <label>Duplicate Therapies</label>
+        <div class="risk-bar"><div class="risk-fill" style="width: 20%;"></div></div>
+        <span>20</span>
+      </div>
+
+      <div class="risk-factor">
+        <label>Guideline Alignment</label>
+        <div class="risk-bar"><div class="risk-fill" style="width: 85%;"></div></div>
+        <span>85</span>
+      </div>
+
+      <div class="risk-factor">
+        <label>Safety Alerts</label>
+        <div class="risk-bar"><div class="risk-fill" style="width: 60%;"></div></div>
+        <span>60</span>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN: ALERTS + COMPLIANCE -->
+    <div>
+
+      <section class="card">
+        <h3>Active Alerts</h3>
+        <ul id="alertList">
+          <li><strong>High Severity:</strong> Potential drug interaction detected.</li>
+          <li><strong>Medium Severity:</strong> Dose may be above recommended range.</li>
+          <li><strong>Low Severity:</strong> Duplicate therapy flagged.</li>
+        </ul>
+      </section>
+
+      <section class="card" style="margin-top: 20px;">
+        <h3>Compliance Status</h3>
+        <p id="complianceText">Compliant with safety guidelines.</p>
+      </section>
+
+      <section class="card" style="margin-top: 20px;">
+        <h3>Recommendations</h3>
+        <ul id="recommendList">
+          <li>Review drug interaction risk.</li>
+          <li>Consider adjusting dose.</li>
+          <li>Evaluate necessity of duplicate therapy.</li>
+        </ul>
+      </section>
+
+    </div>
+
+  </div>
+
+  <!-- RISK TREND -->
+  <section class="card" style="margin-top: 20px;">
+    <h3>Risk Trend Over Time</h3>
+    <p>This chart will show how risk changes across plan versions.</p>
+    <div class="risk-trend-placeholder">[Trend Chart Placeholder]</div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="card" style="margin-top: 20px;">
+    <h3>Risk Summary</h3>
+    <p><strong>Patient:</strong> Demo Patient</p>
+    <p><strong>Plan:</strong> Demo Treatment Plan</p>
+    <p><strong>Generated:</strong> Today</p>
+    <p><strong>Model Version:</strong> Demo v1.0</p>
+  </section>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 Human Centered AI Healthcare Project</p>
+</footer>
+
+<script>
+// Static demo risk score
+const riskScore = 62; // out of 100
+
+// Fill gauge
+const gaugeFill = document.getElementById("riskGaugeFill");
+gaugeFill.style.width = riskScore + "%";
+
+// Text
+document.getElementById("riskScoreText").textContent =
+  "Risk Score: " + riskScore + " out of 100";
+
+// Band
+let band = "Low Risk";
+let bandClass = "risk-low";
+
+if (riskScore >= 75) {
+  band = "High Risk";
+  bandClass = "risk-high";
+} else if (riskScore >= 50) {
+  band = "Moderate Risk";
+  bandClass = "risk-moderate";
+}
+
+document.getElementById("riskBandText").textContent = band;
+document.getElementById("riskBandText").className = bandClass;
+
+// Compliance
+document.getElementById("complianceText").textContent =
+  riskScore >= 70 ? "Needs Review" : "Compliant with safety guidelines";
+</script>
 
 </body>
 </html>

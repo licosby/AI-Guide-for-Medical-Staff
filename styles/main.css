@@ -266,9 +266,11 @@ button:hover {
 
 .trust-badges {
   text-align: center;
-  margin: 50px 0;
+  margin: 50px auto;
   font-size: 1rem;
   color: #555;
+  width: 100%;
+  display: block;
 }
 
 /* ===========================
@@ -372,4 +374,52 @@ button:hover {
 .risk-escalation {
   color: purple;
   font-weight: 600;
+}
+
+/* ===========================
+   RISK CALCULATOR DASHBOARD
+   =========================== */
+
+/* Cards should sit closer together */
+.card {
+  margin: 0;
+  padding: 16px 20px;
+}
+/* ===========================
+   RISK CALCULATOR DASHBOARD (SAFE RESPONSIVE VERSION)
+   =========================== */
+
+.risk-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  align-items: stretch;
+  justify-items: stretch;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.bottom-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+
+/* Reduce vertical spacing between sections */
+main section {
+  margin-top: 12px;
+}
+
+/* Keep the whole dashboard visible without scrolling */
+main.treatment-analyzer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+/* Prevent horizontal scroll */
+html, body {
+  overflow-x: hidden;
+  width: 100%;
 }
