@@ -1,0 +1,8 @@
+{
+  "name": "HCAI Compliance Assistant",
+  "description": "AI-Powered Clinical Safety & Compliance Assistant for training, risk assessment, and explainable clinical decision support.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
