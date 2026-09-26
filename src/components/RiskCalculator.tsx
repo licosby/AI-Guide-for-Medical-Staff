@@ -10,10 +10,12 @@ import {
   Send, 
   RefreshCw,
   Sparkles,
-  HeartPulse
+  HeartPulse,
+  HelpCircle
 } from 'lucide-react';
 import { Patient, RiskAnalysis } from '../types/clinical';
 import { evaluateTreatmentPlan } from '../services/clinicalRulesEngine';
+import { ExplainScoreModal } from './ExplainScoreModal';
 
 interface RiskCalculatorProps {
   patient: Patient;
@@ -27,6 +29,7 @@ export const RiskCalculator: React.FC<RiskCalculatorProps> = ({
   onOpenOrderDispatch
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
+  const [isExplainScoreOpen, setIsExplainScoreOpen] = useState(false);
   const [riskData, setRiskData] = useState<RiskAnalysis>(() => 
     evaluateTreatmentPlan({
       patient,
@@ -149,21 +152,33 @@ export const RiskCalculator: React.FC<RiskCalculatorProps> = ({
           </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-around gap-6 py-2">
-            {/* Speedometer Gauge */}
-            <div className="relative w-44 h-24 flex items-end justify-center overflow-hidden">
-              <div className="w-44 h-44 rounded-full border-14 border-slate-200 border-b-transparent border-l-transparent -rotate-45 relative">
-                <div 
-                  className={`w-full h-full rounded-full border-14 border-b-transparent border-l-transparent transition-all duration-700 ${
-                    riskData.overallScore >= 70 ? 'border-red-500' :
-                    riskData.overallScore >= 40 ? 'border-amber-500' : 'border-emerald-500'
-                  }`}
-                  style={{ transform: `rotate(${(riskData.overallScore / 100) * 180}deg)` }}
-                />
+            {/* Speedometer Gauge + Explain Score Button */}
+            <div className="flex flex-col items-center gap-3">
+              <div className="relative w-44 h-24 flex items-end justify-center overflow-hidden">
+                <div className="w-44 h-44 rounded-full border-14 border-slate-200 border-b-transparent border-l-transparent -rotate-45 relative">
+                  <div 
+                    className={`w-full h-full rounded-full border-14 border-b-transparent border-l-transparent transition-all duration-700 ${
+                      riskData.overallScore >= 70 ? 'border-red-500' :
+                      riskData.overallScore >= 40 ? 'border-amber-500' : 'border-emerald-500'
+                    }`}
+                    style={{ transform: `rotate(${(riskData.overallScore / 100) * 180}deg)` }}
+                  />
+                </div>
+                <div className="absolute bottom-1 flex flex-col items-center">
+                  <span className="text-4xl font-extrabold text-slate-900 tracking-tight">{riskData.overallScore}</span>
+                  <span className="text-xs font-bold text-slate-500 -mt-1">/100</span>
+                </div>
               </div>
-              <div className="absolute bottom-1 flex flex-col items-center">
-                <span className="text-4xl font-extrabold text-slate-900 tracking-tight">{riskData.overallScore}</span>
-                <span className="text-xs font-bold text-slate-500 -mt-1">/100</span>
-              </div>
+
+              {/* Button directly under the score */}
+              <button
+                type="button"
+                onClick={() => setIsExplainScoreOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 hover:text-indigo-800 font-bold text-xs rounded-lg border border-indigo-200 shadow-2xs transition-colors cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Explain Score</span>
+              </button>
             </div>
 
             <div className="space-y-2 text-left">
@@ -395,6 +410,18 @@ export const RiskCalculator: React.FC<RiskCalculatorProps> = ({
           </div>
         </div>
       </div>
+
+      {/* Reusable Explain Score Modal */}
+      <ExplainScoreModal
+        isOpen={isExplainScoreOpen}
+        onClose={() => setIsExplainScoreOpen(false)}
+        patient={patient}
+        riskData={riskData}
+        score={riskData.overallScore}
+        riskCategory={riskData.riskCategory}
+        confidence={78}
+        onNavigateToFullExplainability={() => onSelectView('explainability')}
+      />
     </div>
   );
 };

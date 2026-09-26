@@ -17,11 +17,13 @@ import {
   TrendingDown,
   Clock,
   ShieldCheck,
-  Send
+  Send,
+  HelpCircle
 } from 'lucide-react';
 import { Patient, MedicationItem, ProcedureItem, TherapyItem, DiagnosticTestItem, ClinicalAlert, RiskAnalysis } from '../types/clinical';
 import { DRUG_CATALOG, PROCEDURES_CATALOG, THERAPIES_CATALOG, TESTS_CATALOG } from '../data/medicalDatabase';
 import { evaluateTreatmentPlan } from '../services/clinicalRulesEngine';
+import { ExplainScoreModal } from './ExplainScoreModal';
 
 interface TreatmentAnalyzerProps {
   patient: Patient;
@@ -37,6 +39,7 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
   onSelectView
 }) => {
   const [activeTab, setActiveTab] = useState<'medications' | 'procedures' | 'therapies' | 'tests'>('medications');
+  const [isExplainScoreOpen, setIsExplainScoreOpen] = useState(false);
   
   // Treatment plan local state
   const [medications, setMedications] = useState<MedicationItem[]>(patient.medications);
@@ -581,13 +584,23 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
               </div>
             </div>
 
-            <div className="pt-1">
+            <div className="pt-1 flex flex-col items-center gap-2">
               <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold ${
                 analysisResult.overallScore >= 70 ? 'bg-red-100 text-red-700' :
                 analysisResult.overallScore >= 40 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
               }`}>
                 {analysisResult.riskCategory}
               </span>
+
+              {/* Explain Score Button directly under score */}
+              <button
+                type="button"
+                onClick={() => setIsExplainScoreOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 bg-white hover:bg-slate-100 text-indigo-700 hover:text-indigo-800 font-bold text-[11px] rounded-lg border border-indigo-200 shadow-2xs transition-colors cursor-pointer"
+              >
+                <HelpCircle className="w-3.5 h-3.5 text-indigo-600" />
+                <span>Explain Score</span>
+              </button>
             </div>
           </div>
 
@@ -790,6 +803,18 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
           ))}
         </div>
       </section>
+
+      {/* Explain Score Modal */}
+      <ExplainScoreModal
+        isOpen={isExplainScoreOpen}
+        onClose={() => setIsExplainScoreOpen(false)}
+        patient={patient}
+        riskData={analysisResult}
+        score={analysisResult.overallScore}
+        riskCategory={analysisResult.riskCategory}
+        confidence={analysisResult.clinicalConfidence}
+        onNavigateToFullExplainability={() => onSelectView('explainability')}
+      />
     </div>
   );
 };
