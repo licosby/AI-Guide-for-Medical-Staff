@@ -18,34 +18,47 @@ import {
   Clock,
   ShieldCheck,
   Send,
-  HelpCircle
+  HelpCircle,
+  TrendingUp,
+  BookOpen,
+  Info
 } from 'lucide-react';
 import { Patient, MedicationItem, ProcedureItem, TherapyItem, DiagnosticTestItem, ClinicalAlert, RiskAnalysis } from '../types/clinical';
 import { DRUG_CATALOG, PROCEDURES_CATALOG, THERAPIES_CATALOG, TESTS_CATALOG } from '../data/medicalDatabase';
+import { INITIAL_PATIENTS } from '../data/mockPatients';
 import { evaluateTreatmentPlan } from '../services/clinicalRulesEngine';
 import { ExplainScoreModal } from './ExplainScoreModal';
+import { PatientSelector, PatientCardList } from './PatientSelector';
 
 interface TreatmentAnalyzerProps {
-  patient: Patient;
+  patient?: Patient | null;
+  patients?: Patient[];
+  onSelectPatient?: (patient: Patient) => void;
   onUpdatePatient: (updated: Patient) => void;
   onOpenOrderDispatch: () => void;
   onSelectView: (view: string) => void;
 }
 
 export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
-  patient,
+  patient: _initialPatientProp, // Do NOT auto-load; require explicit selection
+  patients = INITIAL_PATIENTS,
+  onSelectPatient,
   onUpdatePatient,
   onOpenOrderDispatch,
   onSelectView
 }) => {
+  // Requirement: Do NOT automatically load the last viewed patient.
+  // User must explicitly choose a patient via the Select Patient feature.
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
   const [activeTab, setActiveTab] = useState<'medications' | 'procedures' | 'therapies' | 'tests'>('medications');
   const [isExplainScoreOpen, setIsExplainScoreOpen] = useState(false);
   
-  // Treatment plan local state
-  const [medications, setMedications] = useState<MedicationItem[]>(patient.medications);
-  const [procedures, setProcedures] = useState<ProcedureItem[]>(patient.procedures);
-  const [therapies, setTherapies] = useState<TherapyItem[]>(patient.therapies);
-  const [tests, setTests] = useState<DiagnosticTestItem[]>(patient.tests);
+  // Treatment plan local state - refreshed when a patient is selected
+  const [medications, setMedications] = useState<MedicationItem[]>([]);
+  const [procedures, setProcedures] = useState<ProcedureItem[]>([]);
+  const [therapies, setTherapies] = useState<TherapyItem[]>([]);
+  const [tests, setTests] = useState<DiagnosticTestItem[]>([]);
   const [planNotes, setPlanNotes] = useState<string>('Blood pressure sub-optimally controlled. Monitoring potassium and renal profile.');
   const [consentStatus, setConsentStatus] = useState<'Yes' | 'Pending' | 'Not Required'>('Yes');
 
@@ -60,27 +73,86 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
 
   // Analysis result
   const [isAnalyzing, setIsAnalyzing] = useState<boolean>(false);
-  const [analysisResult, setAnalysisResult] = useState<RiskAnalysis>(() => 
-    evaluateTreatmentPlan({
-      patient,
-      medications: patient.medications,
-      procedures: patient.procedures,
-      therapies: patient.therapies,
-      tests: patient.tests,
-      consentStatus: 'Yes',
-      planNotes: 'Initial evaluation'
-    })
-  );
+  const [analysisResult, setAnalysisResult] = useState<RiskAnalysis | null>(null);
 
-  // Selected alert for deep drill-down (handwritten note: "When I click through alerts they expand in selected alerts")
+  // Selected alert for deep drill-down and independent toggle state for clinical concerns
+  const [expandedAlerts, setExpandedAlerts] = useState<Record<string, boolean>>({});
   const [expandedAlertId, setExpandedAlertId] = useState<string | null>(null);
+
+  // Independent toggle state for risk breakdown categories
+  const [expandedRiskCategories, setExpandedRiskCategories] = useState<Record<string, boolean>>({});
+
+  // Handler to select and load a patient into the analyzer
+  const handleSelectPatient = (chosenPatient: Patient) => {
+    setSelectedPatient(chosenPatient);
+    setMedications([...chosenPatient.medications]);
+    setProcedures([...chosenPatient.procedures]);
+    setTherapies([...chosenPatient.therapies]);
+    setTests([...chosenPatient.tests]);
+    setPlanNotes(chosenPatient.planSummary || 'Blood pressure sub-optimally controlled. Monitoring potassium and renal profile.');
+    setConsentStatus('Yes');
+    setSelectedCatalogDrug('');
+    setSelectedDose('');
+    setSelectedFreq('Daily');
+    setSelectedProcedure('');
+    setSelectedTherapy('');
+    setSelectedTest('');
+    setExpandedAlerts({});
+    setExpandedRiskCategories({});
+
+    const initialRes = evaluateTreatmentPlan({
+      patient: chosenPatient,
+      medications: chosenPatient.medications,
+      procedures: chosenPatient.procedures,
+      therapies: chosenPatient.therapies,
+      tests: chosenPatient.tests,
+      consentStatus: 'Yes',
+      planNotes: chosenPatient.planSummary || 'Initial evaluation'
+    });
+    setAnalysisResult(initialRes);
+    if (initialRes.alerts.length > 0) {
+      setExpandedAlertId(initialRes.alerts[0].id);
+      setExpandedAlerts({ [initialRes.alerts[0].id]: true });
+    }
+
+    if (onSelectPatient) {
+      onSelectPatient(chosenPatient);
+    }
+  };
+
+  const handleClearPatient = () => {
+    setSelectedPatient(null);
+    setMedications([]);
+    setProcedures([]);
+    setTherapies([]);
+    setTests([]);
+    setAnalysisResult(null);
+    setExpandedAlerts({});
+    setExpandedRiskCategories({});
+  };
+
+  const toggleRiskCategory = (categoryKey: string) => {
+    setExpandedRiskCategories(prev => ({
+      ...prev,
+      [categoryKey]: !prev[categoryKey]
+    }));
+  };
+
+  const toggleAlert = (alertId: string) => {
+    setExpandedAlerts(prev => ({
+      ...prev,
+      [alertId]: !prev[alertId]
+    }));
+    setExpandedAlertId(alertId);
+  };
 
   // Run analysis function
   const runAnalysis = () => {
+    if (!selectedPatient) return;
     setIsAnalyzing(true);
     setTimeout(() => {
       const res = evaluateTreatmentPlan({
-        patient,
+        patient: selectedPatient,
         medications,
         procedures,
         therapies,
@@ -91,13 +163,19 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
       setAnalysisResult(res);
       if (res.alerts.length > 0) {
         setExpandedAlertId(res.alerts[0].id);
+        setExpandedAlerts(prev => ({
+          ...prev,
+          [res.alerts[0].id]: true
+        }));
       }
       setIsAnalyzing(false);
     }, 450);
   };
 
   useEffect(() => {
-    runAnalysis();
+    if (selectedPatient) {
+      runAnalysis();
+    }
   }, [medications, procedures, therapies, tests, consentStatus]);
 
   // Add Medication
@@ -183,8 +261,9 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
 
   // Save changes to patient
   const handleAcceptPlan = () => {
+    if (!selectedPatient) return;
     onUpdatePatient({
-      ...patient,
+      ...selectedPatient,
       medications,
       procedures,
       therapies,
@@ -195,43 +274,92 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
 
   return (
     <div className="p-4 lg:p-6 max-w-7xl mx-auto space-y-6 text-xs">
-      {/* Patient Banner matching treatment analyzer.png */}
-      <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold text-sm">
-            {patient.name.slice(0, 2).toUpperCase()}
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="text-base font-bold text-slate-900">{patient.name}</span>
-              <span className="font-mono text-slate-500 font-semibold">MRN {patient.mrn}</span>
-            </div>
-            <div className="text-slate-500 flex items-center gap-3 text-[11px] mt-0.5">
-              <span>Allergies: <strong className="text-red-600">{patient.allergies.map(a => a.allergen).join(', ') || 'NKDA'}</strong></span>
-              <span>•</span>
-              <span>Problems: <strong className="text-slate-700">{patient.activeProblems.length} active</strong></span>
-              <span>•</span>
-              <span>Last Labs: <strong className="text-slate-700">May 7, 2025</strong></span>
-            </div>
-          </div>
-        </div>
+      {/* Patient Selection Component directly at top of Treatment Analyzer */}
+      <PatientSelector
+        patients={patients}
+        selectedPatient={selectedPatient}
+        onSelectPatient={handleSelectPatient}
+        onClearPatient={handleClearPatient}
+      />
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => onSelectView('risk-calculator')}
-            className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors"
-          >
-            View Risk Calculator →
-          </button>
-          <button
-            onClick={handleAcceptPlan}
-            className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
-          >
-            <Send className="w-3.5 h-3.5" />
-            <span>Accept & Upload Orders</span>
-          </button>
+      {/* If no patient is selected yet, show clear prompt and hide treatment plan fields */}
+      {!selectedPatient || !analysisResult ? (
+        <div className="space-y-6">
+          <div className="bg-white rounded-2xl p-8 sm:p-10 border border-slate-200 shadow-xs text-center space-y-4">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center mx-auto shadow-2xs">
+              <Stethoscope className="w-8 h-8" />
+            </div>
+            
+            <div className="max-w-xl mx-auto space-y-2">
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                Please select a patient to begin analysis
+              </h2>
+              <p className="text-slate-500 text-xs sm:text-sm leading-relaxed">
+                The Treatment Analyzer evaluates real-time pharmacological regimens, drug interactions, contraindications, and guideline alignments. Choose a patient from the selector above or pick a clinical profile below to load their medical chart.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2 text-[11px] text-slate-600 font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
+                <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
+                No auto-loaded patient
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
+                <ShieldCheck className="w-3.5 h-3.5 text-blue-600" />
+                Live Rule Engine Verification
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-full">
+                <Activity className="w-3.5 h-3.5 text-indigo-600" />
+                Interactive Risk Breakdown
+              </span>
+            </div>
+          </div>
+
+          {/* Quick-Pick Patient Cards Directory */}
+          <PatientCardList
+            patients={patients}
+            onSelectPatient={handleSelectPatient}
+          />
         </div>
-      </div>
+      ) : (
+        <>
+          {/* Patient Banner matching treatment analyzer.png */}
+          <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold text-sm">
+                {selectedPatient.name.slice(0, 2).toUpperCase()}
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-bold text-slate-900">{selectedPatient.name}</span>
+                  <span className="font-mono text-slate-500 font-semibold">MRN {selectedPatient.mrn}</span>
+                </div>
+                <div className="text-slate-500 flex items-center gap-3 text-[11px] mt-0.5">
+                  <span>Allergies: <strong className="text-red-600">{selectedPatient.allergies.map(a => a.allergen).join(', ') || 'NKDA'}</strong></span>
+                  <span>•</span>
+                  <span>Problems: <strong className="text-slate-700">{selectedPatient.activeProblems.length} active</strong></span>
+                  <span>•</span>
+                  <span>Last Labs: <strong className="text-slate-700">May 7, 2025</strong></span>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onSelectView('risk-calculator')}
+                className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-colors"
+              >
+                View Risk Calculator →
+              </button>
+              <button
+                onClick={handleAcceptPlan}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-sm flex items-center gap-1.5 transition-colors"
+              >
+                <Send className="w-3.5 h-3.5" />
+                <span>Accept & Upload Orders</span>
+              </button>
+            </div>
+          </div>
 
       {/* Main 3-Column Clinical Engine matching treatment analyzer.png */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -645,62 +773,242 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
             <span className="text-slate-400 text-[10px]">Step 3 of 3</span>
           </div>
 
-          {/* Risk Breakdown Bars */}
+          {/* Risk Breakdown Bars - Clickable with Independent Detail Panels */}
           <div className="space-y-2">
-            <span className="font-bold text-slate-700 text-xs block">Risk Breakdown</span>
-            <div className="space-y-1.5">
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-600 mb-0.5">
-                  <span>Drug Interactions</span>
-                  <span className="font-bold">{analysisResult.breakdown.drugInteractions}%</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5">
-                  <div className="bg-red-500 h-1.5 rounded-full" style={{ width: `${analysisResult.breakdown.drugInteractions}%` }}></div>
-                </div>
-              </div>
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-slate-700 text-xs block">Risk Breakdown</span>
+              <span className="text-[10px] text-indigo-600 font-medium">Click any bar to expand factors</span>
+            </div>
 
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-600 mb-0.5">
-                  <span>Adverse Effects</span>
-                  <span className="font-bold">{analysisResult.breakdown.adverseEffects}%</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5">
-                  <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: `${analysisResult.breakdown.adverseEffects}%` }}></div>
-                </div>
-              </div>
+            <div className="space-y-2">
+              {[
+                {
+                  id: 'drugInteractions',
+                  label: 'Drug Interactions',
+                  score: analysisResult.breakdown.drugInteractions,
+                  colorBar: 'bg-red-500',
+                  badgeBg: 'bg-red-50 text-red-700 border-red-200',
+                  summary: 'Pharmacological synergy & clearance load',
+                  factors: [
+                    {
+                      name: 'Lisinopril + Spironolactone Concomitant RAS Blockade',
+                      impact: '+18 pts',
+                      description: 'Dual inhibition of renin-angiotensin-aldosterone axis suppresses potassium secretion, elevating hyperkalemia danger (>5.2 mEq/L).',
+                      guideline: 'ACC/AHA HF Guidelines (Class III: Harm)'
+                    },
+                    {
+                      name: 'Metformin Elimination Competition in Reduced eGFR',
+                      impact: '+10 pts',
+                      description: 'Baseline renal filtration rate (eGFR ~54 mL/min) slows tubular drug excretion, increasing systemic metabolite burden.',
+                      guideline: 'FDA Metformin Renal Safety Label'
+                    },
+                    {
+                      name: 'Hepatic Cytochrome P450 Metabolic Overlap',
+                      impact: '+7 pts',
+                      description: 'Concurrent Statin / Antihypertensive substrate utilization across common enzymatic clearance pathways.',
+                      guideline: 'Lexicomp Multi-Drug Interaction Matrix'
+                    }
+                  ],
+                  mitigation: 'Order basic metabolic panel (BMP) in 10–14 days; verify serum potassium & serum creatinine before dose escalation.'
+                },
+                {
+                  id: 'adverseEffects',
+                  label: 'Adverse Effects',
+                  score: analysisResult.breakdown.adverseEffects,
+                  colorBar: 'bg-amber-500',
+                  badgeBg: 'bg-amber-50 text-amber-800 border-amber-200',
+                  summary: 'Hyperkalemia, orthostasis & azotemia susceptibility',
+                  factors: [
+                    {
+                      name: 'Serum Potassium Accumulation Threshold',
+                      impact: '+14 pts',
+                      description: 'Baseline serum potassium at 4.9 mEq/L borders the critical alert window with blunted renal compensation capacity.',
+                      guideline: 'KDIGO Clinical Practice Guideline'
+                    },
+                    {
+                      name: 'Orthostatic Reflex Suppression & Fall Hazard',
+                      impact: '+10 pts',
+                      description: 'Combined systemic vasodilation can drop diastolic pressure below 60 mmHg during rapid postural transitions.',
+                      guideline: 'AHA Geriatric Cardiovascular Safety'
+                    },
+                    {
+                      name: 'Intraglomerular Hemodynamic Transient Azotemia',
+                      impact: '+6 pts',
+                      description: 'Efferent arteriolar dilation commonly triggers an initial 10–20% rise in serum creatinine upon therapy initiation.',
+                      guideline: 'National Kidney Foundation Guidelines'
+                    }
+                  ],
+                  mitigation: 'Instruct on gradual position changes, maintain fluid volume balance, and check seated/standing blood pressures.'
+                },
+                {
+                  id: 'diseaseInteractions',
+                  label: 'Disease Interactions',
+                  score: analysisResult.breakdown.diseaseInteractions,
+                  colorBar: 'bg-blue-500',
+                  badgeBg: 'bg-blue-50 text-blue-800 border-blue-200',
+                  summary: 'CKD Stage 3, Diabetes & hypertensive vascular stiffness',
+                  factors: [
+                    {
+                      name: 'Stage 3 Chronic Kidney Disease Comorbidity',
+                      impact: '+12 pts',
+                      description: 'Baseline renal microvascular impairment limits pharmacokinetic margin of safety for cardioprotective drugs.',
+                      guideline: 'ADA-KDIGO Consensus on Diabetes & CKD'
+                    },
+                    {
+                      name: 'Type 2 Diabetes Endothelial Remodeling',
+                      impact: '+8 pts',
+                      description: 'Glycemic control (HbA1c 7.2%) correlates with arterial stiffness and heightened baroreceptor dampening.',
+                      guideline: 'ADA Standards of Medical Care 2024'
+                    },
+                    {
+                      name: 'Isolated Systolic Hypertension Profile',
+                      impact: '+5 pts',
+                      description: 'Elevated pulse pressure (>54 mmHg) indicates chronic arterial compliance loss and end-organ shear stress.',
+                      guideline: '2023 ACC/AHA High Blood Pressure Practice'
+                    }
+                  ],
+                  mitigation: 'Obtain urine albumin-to-creatinine ratio (uACR) and synchronize with nephrology clinical care pathway.'
+                },
+                {
+                  id: 'doseAndDuration',
+                  label: 'Dose & Duration',
+                  score: analysisResult.breakdown.doseAndDuration,
+                  colorBar: 'bg-purple-500',
+                  badgeBg: 'bg-purple-50 text-purple-800 border-purple-200',
+                  summary: 'Maintenance ceiling proximity & surveillance cycle',
+                  factors: [
+                    {
+                      name: 'Lisinopril 20 mg Daily Target Proximity',
+                      impact: '+9 pts',
+                      description: 'Patient is at standard upper-middle clinical titration before compulsory lab re-evaluation is mandated.',
+                      guideline: 'ACC Blood Pressure Optimization Protocols'
+                    },
+                    {
+                      name: 'Chronic Continuous Regimen Duration (>180 Days)',
+                      impact: '+6 pts',
+                      description: 'Protracted duration without documented interim safety profile re-testing increases latent risk accumulation.',
+                      guideline: 'AHRQ Ambulatory Safety Recommendations'
+                    },
+                    {
+                      name: 'Titration Interval Under Staged 4-Week Horizon',
+                      impact: '+5 pts',
+                      description: 'Allow adequate home blood pressure diary accumulation before proceeding to subsequent dose adjustments.',
+                      guideline: 'USPSTF Cardiovascular Prevention Guidelines'
+                    }
+                  ],
+                  mitigation: 'Review 14-day home blood pressure readings and schedule comprehensive lab panel within 30 days.'
+                }
+              ].map(cat => {
+                const isCatExpanded = !!expandedRiskCategories[cat.id];
+                return (
+                  <div
+                    key={cat.id}
+                    className={`rounded-lg border transition-all duration-200 overflow-hidden ${
+                      isCatExpanded
+                        ? 'border-indigo-300 bg-slate-50/70 shadow-2xs ring-1 ring-indigo-200/50'
+                        : 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/60'
+                    }`}
+                  >
+                    {/* Clickable Risk Bar Header */}
+                    <button
+                      type="button"
+                      onClick={() => toggleRiskCategory(cat.id)}
+                      className="w-full text-left p-2.5 space-y-1.5 cursor-pointer focus:outline-hidden group"
+                      aria-expanded={isCatExpanded}
+                    >
+                      <div className="flex items-center justify-between text-[11px]">
+                        <div className="flex items-center gap-1.5 font-bold text-slate-800 group-hover:text-indigo-900 transition-colors">
+                          <span className={`w-2 h-2 rounded-full ${cat.colorBar}`}></span>
+                          <span>{cat.label}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${cat.badgeBg}`}>
+                            {cat.score}%
+                          </span>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
+                            isCatExpanded
+                              ? 'bg-indigo-600 text-white shadow-2xs'
+                              : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+                          }`}>
+                            <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 transform ${
+                              isCatExpanded ? 'rotate-90' : 'rotate-0'
+                            }`} />
+                          </div>
+                        </div>
+                      </div>
 
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-600 mb-0.5">
-                  <span>Disease Interactions</span>
-                  <span className="font-bold">{analysisResult.breakdown.diseaseInteractions}%</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5">
-                  <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${analysisResult.breakdown.diseaseInteractions}%` }}></div>
-                </div>
-              </div>
+                      {/* Progress Bar Track */}
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                        <div
+                          className={`${cat.colorBar} h-1.5 rounded-full transition-all duration-500`}
+                          style={{ width: `${cat.score}%` }}
+                        />
+                      </div>
 
-              <div>
-                <div className="flex justify-between text-[11px] text-slate-600 mb-0.5">
-                  <span>Dose & Duration</span>
-                  <span className="font-bold">{analysisResult.breakdown.doseAndDuration}%</span>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5">
-                  <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${analysisResult.breakdown.doseAndDuration}%` }}></div>
-                </div>
-              </div>
+                      <div className="flex justify-between items-center text-[10px] text-slate-500">
+                        <span className="truncate pr-2">{cat.summary}</span>
+                        <span className="text-indigo-600 font-semibold shrink-0 group-hover:underline">
+                          {isCatExpanded ? 'Hide factors ▲' : 'Show factors ▼'}
+                        </span>
+                      </div>
+                    </button>
+
+                    {/* Expandable Detail Panel directly beneath the bar */}
+                    {isCatExpanded && (
+                      <div className="px-3 pb-3 pt-2.5 border-t border-slate-200 bg-white text-xs space-y-2.5 animate-fadeIn">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                          <span className="flex items-center gap-1.5">
+                            <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+                            <span>Factors Contributing to {cat.label} ({cat.factors.length})</span>
+                          </span>
+                          <span className="text-[10px] text-slate-400">Impact on Category</span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {cat.factors.map((factor, fIdx) => (
+                            <div key={fIdx} className="p-2 rounded bg-slate-50 border border-slate-100 text-[11px] space-y-1">
+                              <div className="flex items-start justify-between gap-2">
+                                <span className="font-bold text-slate-800">{factor.name}</span>
+                                <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-100 px-1.5 py-0.2 rounded shrink-0">
+                                  {factor.impact}
+                                </span>
+                              </div>
+                              <p className="text-slate-600 text-[10px] leading-relaxed">
+                                {factor.description}
+                              </p>
+                              <div className="text-[10px] text-slate-400 flex items-center gap-1 pt-0.5">
+                                <span className="font-semibold text-slate-500">Source:</span> {factor.guideline}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Clinical Mitigation Advisory */}
+                        <div className="p-2.5 rounded-lg bg-indigo-50/80 border border-indigo-100 text-[10px] text-indigo-950 flex items-start gap-2">
+                          <ShieldCheck className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold text-indigo-800">Clinical Action / Mitigation: </span>
+                            <span>{cat.mitigation}</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           </div>
 
-          {/* Top Concerns: High Severity at Top, Expandable on Click! */}
+          {/* Top Concerns: High Severity at Top, Expandable on Click with Enhanced Visible Arrows & Rotation */}
           <div className="space-y-2 pt-2 border-t border-slate-100">
             <div className="flex items-center justify-between">
               <span className="font-bold text-slate-700 text-xs">Top Clinical Concerns</span>
-              <span className="text-[10px] text-slate-400">High severity at top</span>
+              <span className="text-[10px] text-slate-400">High severity at top • Click to toggle</span>
             </div>
 
-            <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+            <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
               {analysisResult.alerts.map(alert => {
-                const isExpanded = expandedAlertId === alert.id;
+                const isExpanded = !!expandedAlerts[alert.id];
                 const badgeColor = 
                   alert.severity === 'Critical' ? 'bg-red-100 text-red-800 border-red-300' :
                   alert.severity === 'High' ? 'bg-red-50 text-red-700 border-red-200' :
@@ -710,29 +1018,49 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
                 return (
                   <div
                     key={alert.id}
-                    onClick={() => setExpandedAlertId(isExpanded ? null : alert.id)}
-                    className={`p-2.5 rounded-lg border transition-all cursor-pointer ${
-                      isExpanded ? 'bg-blue-50/40 border-blue-300 shadow-xs' : 'bg-slate-50 border-slate-200 hover:bg-slate-100'
+                    onClick={() => toggleAlert(alert.id)}
+                    className={`p-3 rounded-lg border transition-all cursor-pointer ${
+                      isExpanded 
+                        ? 'bg-blue-50/40 border-indigo-300 shadow-xs ring-1 ring-indigo-200/50' 
+                        : 'bg-slate-50 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold border ${badgeColor}`}>
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border shrink-0 ${badgeColor}`}>
                           {alert.severity}
                         </span>
-                        <span className="font-bold text-slate-800 text-[11px]">{alert.title}</span>
+                        <span className="font-bold text-slate-800 text-[11px] truncate">{alert.title}</span>
                       </div>
-                      {isExpanded ? <ChevronDown className="w-3.5 h-3.5 text-slate-400" /> : <ChevronRight className="w-3.5 h-3.5 text-slate-400" />}
+
+                      {/* Prominent High-Visibility Arrow Button with Smooth Rotation Animation */}
+                      <div 
+                        className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 border transition-all duration-300 ${
+                          isExpanded 
+                            ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs ring-2 ring-indigo-200' 
+                            : 'bg-indigo-50/90 text-indigo-700 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300 shadow-2xs'
+                        }`}
+                        title={isExpanded ? "Collapse clinical concern" : "Expand clinical concern"}
+                      >
+                        <ChevronRight 
+                          className={`w-4.5 h-4.5 transition-transform duration-300 ease-in-out transform ${
+                            isExpanded ? 'rotate-90 text-white' : 'rotate-0 text-indigo-700'
+                          }`} 
+                        />
+                      </div>
                     </div>
 
                     <p className="text-slate-600 text-[11px] mt-1 line-clamp-2">{alert.summary}</p>
 
-                    {/* Expanded view matching user note: "When I click through alerts they expand in selected alerts" */}
+                    {/* Expanded details with smooth entrance */}
                     {isExpanded && (
-                      <div className="mt-2.5 pt-2 border-t border-slate-200 text-[11px] space-y-1.5">
-                        <p className="text-slate-700 leading-relaxed">{alert.detailedReason}</p>
-                        <div className="p-2 bg-white rounded border border-slate-200 text-[10px] text-slate-500">
-                          <strong className="text-slate-700">Guideline:</strong> {alert.clinicalGuideline}
+                      <div className="mt-2.5 pt-2.5 border-t border-slate-200 text-[11px] space-y-2 animate-fadeIn">
+                        <p className="text-slate-700 leading-relaxed font-normal">{alert.detailedReason}</p>
+                        <div className="p-2 bg-white rounded border border-slate-200 text-[10px] text-slate-600 flex items-start gap-1.5">
+                          <BookOpen className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                          <div>
+                            <strong className="text-slate-800">Evidence Guideline:</strong> {alert.clinicalGuideline}
+                          </div>
                         </div>
                       </div>
                     )}
@@ -805,16 +1133,20 @@ export const TreatmentAnalyzer: React.FC<TreatmentAnalyzerProps> = ({
       </section>
 
       {/* Explain Score Modal */}
-      <ExplainScoreModal
-        isOpen={isExplainScoreOpen}
-        onClose={() => setIsExplainScoreOpen(false)}
-        patient={patient}
-        riskData={analysisResult}
-        score={analysisResult.overallScore}
-        riskCategory={analysisResult.riskCategory}
-        confidence={analysisResult.clinicalConfidence}
-        onNavigateToFullExplainability={() => onSelectView('explainability')}
-      />
+      {selectedPatient && analysisResult && (
+        <ExplainScoreModal
+          isOpen={isExplainScoreOpen}
+          onClose={() => setIsExplainScoreOpen(false)}
+          patient={selectedPatient}
+          riskData={analysisResult}
+          score={analysisResult.overallScore}
+          riskCategory={analysisResult.riskCategory}
+          confidence={analysisResult.clinicalConfidence}
+          onNavigateToFullExplainability={() => onSelectView('explainability')}
+        />
+      )}
+        </>
+      )}
     </div>
   );
 };

@@ -81,6 +81,8 @@ export function App() {
 
         {currentView === 'treatment-analyzer' && (
           <TreatmentAnalyzer
+            patients={patients}
+            onSelectPatient={handleSelectPatient}
             patient={activePatient}
             onUpdatePatient={handleUpdatePatient}
             onOpenOrderDispatch={() => setIsOrderDispatchOpen(true)}

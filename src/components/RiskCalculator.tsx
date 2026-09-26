@@ -11,7 +11,10 @@ import {
   RefreshCw,
   Sparkles,
   HeartPulse,
-  HelpCircle
+  HelpCircle,
+  ChevronRight,
+  ShieldCheck,
+  BookOpen
 } from 'lucide-react';
 import { Patient, RiskAnalysis } from '../types/clinical';
 import { evaluateTreatmentPlan } from '../services/clinicalRulesEngine';
@@ -30,6 +33,16 @@ export const RiskCalculator: React.FC<RiskCalculatorProps> = ({
 }) => {
   const [isUpdating, setIsUpdating] = useState(false);
   const [isExplainScoreOpen, setIsExplainScoreOpen] = useState(false);
+  // Independent toggle state for key risk driver panels
+  const [expandedDrivers, setExpandedDrivers] = useState<Record<string, boolean>>({});
+
+  const toggleDriver = (driverName: string) => {
+    setExpandedDrivers(prev => ({
+      ...prev,
+      [driverName]: !prev[driverName]
+    }));
+  };
+
   const [riskData, setRiskData] = useState<RiskAnalysis>(() => 
     evaluateTreatmentPlan({
       patient,
@@ -207,13 +220,16 @@ export const RiskCalculator: React.FC<RiskCalculatorProps> = ({
           </div>
         </div>
 
-        {/* Key Risk Drivers Card matching risk.png */}
+        {/* Key Risk Drivers Card matching risk.png - Clickable bars with independent detail panels */}
         <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-sm space-y-4">
           <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-            <h2 className="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-red-600" />
-              <span>Key Risk Drivers</span>
-            </h2>
+            <div>
+              <h2 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-red-600" />
+                <span>Key Risk Drivers</span>
+              </h2>
+              <p className="text-[10px] text-slate-400 mt-0.5">Click any risk bar to expand contributing clinical factors</p>
+            </div>
             <button
               onClick={() => onSelectView('explainability')}
               className="text-xs font-semibold text-blue-600 hover:underline"
@@ -222,38 +238,155 @@ export const RiskCalculator: React.FC<RiskCalculatorProps> = ({
             </button>
           </div>
 
-          <div className="space-y-3">
-            {riskData.keyDrivers.map((driver, idx) => (
-              <div 
-                key={idx}
-                onClick={() => onSelectView('explainability')}
-                className="p-2 rounded hover:bg-slate-50 cursor-pointer transition-colors space-y-1"
-              >
-                <div className="flex items-center justify-between text-[11px]">
-                  <span className="font-bold text-slate-800">{driver.name}</span>
-                  <div className="flex items-center gap-2">
-                    <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
-                      driver.impactLevel === 'High' ? 'bg-red-100 text-red-700' :
-                      driver.impactLevel === 'Moderate' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {driver.impactLevel}
-                    </span>
-                    <span className="font-extrabold text-slate-800">{driver.percentage}%</span>
-                  </div>
-                </div>
+          <div className="space-y-2.5">
+            {riskData.keyDrivers.map((driver, idx) => {
+              const isExpanded = !!expandedDrivers[driver.name];
+              const driverDetails: Record<string, { factors: string[]; clinicalNotes: string; mitigation: string }> = {
+                'Uncontrolled Hypertension': {
+                  factors: [
+                    `Patient value: ${patient.vitals.bpSystolic}/${patient.vitals.bpDiastolic} mmHg (Target < 130/80 mmHg)`,
+                    'Stage 1 systolic elevation accelerates target-organ microvascular thickening',
+                    'Elevated pulse pressure indicating aortic vascular compliance loss'
+                  ],
+                  clinicalNotes: 'Persistent hypertension elevates left ventricular afterload and stroke risk.',
+                  mitigation: 'Titrate ACEi or add low-dose thiazide diuretic; target < 130/80 mmHg.'
+                },
+                'Diabetes (A1c 7.2%)': {
+                  factors: [
+                    'Glycated hemoglobin 7.2% exceeding personalized target (< 7.0%)',
+                    'Chronic glycemic variability promoting endothelial cell dysfunction',
+                    'Heightened risk multiplier for macrovascular atherogenesis'
+                  ],
+                  clinicalNotes: 'Suboptimal glycemic control accelerates diabetic nephropathy and coronary plaque instability.',
+                  mitigation: 'Consider SGLT2 inhibitor (Empagliflozin) for synergistic cardiorenal protection.'
+                },
+                'LDL Cholesterol': {
+                  factors: [
+                    'Baseline LDL 82 mg/dL above secondary prevention target (<70 mg/dL)',
+                    'Sub-maximal statin dosing relative to confirmed CAD risk profile',
+                    'Ongoing atherogenic lipoprotein particle endothelial permeation'
+                  ],
+                  clinicalNotes: 'Elevated circulating ApoB-containing particles sustain coronary atheroma progression.',
+                  mitigation: 'Intensify Atorvastatin from 20 mg to 40 mg nightly; recheck lipid panel in 6–8 weeks.'
+                },
+                'Smoking / Vascular Status': {
+                  factors: [
+                    'Former heavy cigarette use with lingering endothelial injury',
+                    'Impaired nitric oxide-mediated vasodilation response',
+                    'Heightened peripheral thrombotic vulnerability'
+                  ],
+                  clinicalNotes: 'Vascular damage from past tobacco exposure persists for 5–10 years post-cessation.',
+                  mitigation: 'Maintain complete tobacco abstinence; reinforce annual vascular screening.'
+                }
+              };
 
-                {/* Progress bar */}
-                <div className="w-full bg-slate-100 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${
-                      driver.impactLevel === 'High' ? 'bg-red-500' :
-                      driver.impactLevel === 'Moderate' ? 'bg-amber-500' : 'bg-blue-500'
-                    }`}
-                    style={{ width: `${driver.percentage * 3.5}%` }}
-                  />
+              const details = driverDetails[driver.name] || {
+                factors: [
+                  `Observed metric: ${driver.patientValue || 'Documented in EHR'}`,
+                  `Clinical weight: ${driver.percentage}% contribution to overall composite score`,
+                  `Evidence source: ${driver.source || 'EHR Flowsheets'}`
+                ],
+                clinicalNotes: 'Identified as a statistically significant contributor by the composite clinical rules engine.',
+                mitigation: 'Review current care plan and discuss personalized intervention goals with patient.'
+              };
+
+              return (
+                <div 
+                  key={idx}
+                  className={`rounded-lg border transition-all duration-200 overflow-hidden ${
+                    isExpanded 
+                      ? 'border-indigo-300 bg-slate-50/70 shadow-2xs ring-1 ring-indigo-200/50' 
+                      : 'border-slate-100 hover:border-slate-200 bg-white hover:bg-slate-50/60'
+                  }`}
+                >
+                  {/* Clickable Bar Button */}
+                  <button
+                    type="button"
+                    onClick={() => toggleDriver(driver.name)}
+                    className="w-full text-left p-2.5 space-y-1.5 cursor-pointer focus:outline-hidden group"
+                    aria-expanded={isExpanded}
+                  >
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-bold text-slate-800 group-hover:text-indigo-900 transition-colors">
+                        {driver.name}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] font-bold ${
+                          driver.impactLevel === 'High' ? 'bg-red-100 text-red-700' :
+                          driver.impactLevel === 'Moderate' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {driver.impactLevel}
+                        </span>
+                        <span className="font-extrabold text-slate-800">{driver.percentage}%</span>
+
+                        {/* Visible Animated Arrow with Rotation */}
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 ${
+                          isExpanded 
+                            ? 'bg-indigo-600 text-white shadow-2xs' 
+                            : 'bg-slate-100 text-slate-500 group-hover:bg-indigo-50 group-hover:text-indigo-600'
+                        }`}>
+                          <ChevronRight className={`w-3.5 h-3.5 transition-transform duration-200 transform ${
+                            isExpanded ? 'rotate-90' : 'rotate-0'
+                          }`} />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Progress bar */}
+                    <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-500 ${
+                          driver.impactLevel === 'High' ? 'bg-red-500' :
+                          driver.impactLevel === 'Moderate' ? 'bg-amber-500' : 'bg-blue-500'
+                        }`}
+                        style={{ width: `${driver.percentage * 3.5}%` }}
+                      />
+                    </div>
+
+                    <div className="flex justify-between items-center text-[10px] text-slate-500">
+                      <span>Source: {driver.source} ({driver.patientValue})</span>
+                      <span className="text-indigo-600 font-semibold group-hover:underline">
+                        {isExpanded ? 'Hide factors ▲' : 'Show factors ▼'}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Expandable Detail Panel directly beneath the bar */}
+                  {isExpanded && (
+                    <div className="px-3 pb-3 pt-2.5 border-t border-slate-200 bg-white text-xs space-y-2.5 animate-fadeIn">
+                      <div className="text-[11px] font-semibold text-slate-700 flex items-center justify-between">
+                        <span className="flex items-center gap-1.5">
+                          <TrendingUp className="w-3.5 h-3.5 text-indigo-600" />
+                          <span>Contributing Factors ({details.factors.length})</span>
+                        </span>
+                        <span className="text-[10px] text-slate-400">{driver.impactLevel} Impact</span>
+                      </div>
+
+                      <ul className="space-y-1 text-[11px] text-slate-600">
+                        {details.factors.map((f, fIdx) => (
+                          <li key={fIdx} className="p-1.5 rounded bg-slate-50 border border-slate-100 flex items-start gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mt-1.5 shrink-0"></span>
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <p className="text-[10px] text-slate-600 italic bg-slate-50/60 p-2 rounded border border-slate-100">
+                        {details.clinicalNotes}
+                      </p>
+
+                      <div className="p-2 rounded bg-indigo-50/80 border border-indigo-100 text-[10px] text-indigo-950 flex items-start gap-1.5">
+                        <ShieldCheck className="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                        <div>
+                          <strong className="text-indigo-800">Target / Mitigation: </strong>
+                          <span>{details.mitigation}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
