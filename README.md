@@ -1,21 +1,19 @@
-# AI Guide for Medical Staff
+# HCAI Compliant Assistant
 
 ## What is this?
-AI Guide for Medical Staff is a prototype web tool that helps healthcare professionals understand and evaluate AI‑assisted treatment plans. It provides interactive modules for analyzing risk, exploring bias and safety, and viewing explainability concepts.
+HCAI Compliant Assistant is an interactive web application that helps clinicians and students explore how AI‑driven treatment recommendations can be made transparent, explainable, and compliant with healthcare standards. It transforms static evaluation forms into an educational decision‑support tool.
 
 ## Why does it exist?
-This project was built to support clinicians learning how to safely integrate AI into medical decision‑making. It demonstrates how human‑centered design can make complex AI outputs more transparent and trustworthy in healthcare settings.
+As AI becomes more integrated into healthcare, clinicians need tools that reveal how recommendations are formed, where risks may emerge, and what factors influence treatment decisions. This project provides a safe, educational environment for exploring risk scoring, bias detection, and explainability concepts without using real patient data.
 
 ## What tools did I use?
-The site was created using **HTML**, **CSS**, and **JavaScript**. GitHub Pages hosts the deployed version. Design choices emphasize clarity and accessibility — simple layouts, readable typography, and consistent color palettes. JavaScript powers the interactive Risk‑to‑Human Calculator, which models how treatment data can be analyzed for safety.
+Built with **React 18**, **Vite**, and **TypeScript** for fast, modular development. Styling uses **CSS Modules** and optional **Tailwind** for responsive layouts. Visualizations use **Chart.js** or **D3.js**. Deployed via **Netlify** connected to **GitHub** for continuous integration.
 
-## How to visit it
-The deployed site is available at:  
-👉 [https://licosby.github.io/AI-Guide-for-Medical-Staff/](https://licosby.github.io/AI-Guide-for-Medical-Staff/)
+## How to access it
+👉 [https://hcaicompliantassistant.netlify.app](https://hcaicompliantassistant.netlify.app/?utm_source=copilot.com)
 
----
-
-Built for Healthcare. Designed for Safety.  
-HIPAA‑aware • Joint Commission Aligned (prototype) • Clinician‑focused  
-_Not valid legal medical advice._
+To run locally:
+```bash
+npm install
+npm run dev
 
